@@ -1,0 +1,9 @@
+.git
+.github
+legacy
+__pycache__
+*.pyc
+*.db
+.venv
+Jenkinsfile
+README.md

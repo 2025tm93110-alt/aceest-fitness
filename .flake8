@@ -1,0 +1,4 @@
+[flake8]
+max-line-length = 110
+# 'site-packages' keeps flake8 out of any virtualenv, whatever it is named
+exclude = .git,__pycache__,legacy,venv,.venv,env,.env,build,dist,site-packages,node_modules
