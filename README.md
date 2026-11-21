@@ -127,7 +127,46 @@ Jenkins acts as the secondary, clean-room BUILD validation:
 
 ## 5. Git workflow
 
-* `main` is always releasable; work happens on `feature/*`, `fix/*`, `infra/*` branches and
-  is merged via pull requests (which trigger CI).
-* Commit messages follow Conventional Commits (`feat:`, `fix:`, `test:`, `ci:`, `docs:`, `build:`).
-* Each legacy desktop version is a tagged commit (`v1.0` … `v3.2.4`); defective releases are rolled back with `git revert`, never by rewriting history.
+* `main` is always releasable. Work starts from `main` on a named branch:
+  `feature/*`, `fix/*`, `test/*`, `infra/*`, or `docs/*`.
+* Small commits use Conventional Commit prefixes:
+  `feat:`, `fix:`, `test:`, `ci:`, `docs:`, `build:`, or `chore:`.
+* Every branch is pushed to GitHub and merged through a pull request (PR).
+  Direct changes to `main` are not used for Assignment 2 work.
+* The PR is expected to trigger GitHub Actions. A merge is evidence-based:
+  lint and tests must pass, changed files must be visible, and the PR
+  description must identify the purpose and validation performed.
+* Release commits on `main` are tagged with immutable versions. The Assignment
+  1 legacy desktop versions use `v1.0` through `v3.2.4`. Assignment 2 release
+  images use the Git commit SHA or a release tag such as `v2.0.0`.
+* Defects are reversed with `git revert`; history is not rewritten on shared
+  branches. Docker and Kubernetes also use immutable image tags and explicit
+  rollout rollback commands.
+
+### Assignment 2 branch and PR sequence
+
+```bash
+git switch main
+git pull --ff-only origin main
+git switch -c infra/assignment-2-pipeline
+
+# Make and validate one coherent change.
+git add <specific-files>
+git diff --cached --check
+git commit -m "infra: add Assignment 2 pipeline configuration"
+git push -u origin infra/assignment-2-pipeline
+```
+
+Open a PR from `infra/assignment-2-pipeline` into `main`. The PR description
+should include:
+
+1. the problem or requirement addressed;
+2. the files changed;
+3. commands and test results used for validation;
+4. Docker image or Kubernetes evidence, when relevant;
+5. Jenkins or GitHub Actions run links; and
+6. the rollback or follow-up work, when relevant.
+
+Merge the PR only after GitHub Actions is green and the changes have been
+reviewed. Capture evidence of the branch list, PR conversation, CI checks,
+merged commit, and release tag for the submission report.
