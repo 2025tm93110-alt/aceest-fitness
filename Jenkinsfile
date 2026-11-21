@@ -34,6 +34,36 @@ pipeline {
             }
         }
 
+        stage('Generate Coverage Report') {
+            steps {
+                sh '''
+                    docker run --name aceest-coverage-${TAG} ${IMAGE}:test-${TAG} \
+                      sh -c "pytest --cov=app --cov-report=term-missing --cov-report=xml:coverage.xml"
+                    docker cp aceest-coverage-${TAG}:/app/coverage.xml ${WORKSPACE}/coverage.xml
+                '''
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    withCredentials([
+                        string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')
+                    ]) {
+                        sh 'sonar-scanner -Dsonar.token=$SONAR_TOKEN'
+                    }
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
         stage('Build Runtime Image') {
             steps {
                 sh 'docker build --target runtime -t ${IMAGE}:${TAG} .'
@@ -62,6 +92,7 @@ pipeline {
     post {
         always {
             sh 'docker rm -f aceest-smoke-${TAG} || true'
+            sh 'docker rm -f aceest-coverage-${TAG} || true'
         }
         success { echo "BUILD SUCCESS: ${IMAGE}:${TAG}" }
         failure { echo "BUILD FAILED - check stage logs above" }
